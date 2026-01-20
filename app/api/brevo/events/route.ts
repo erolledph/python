@@ -79,10 +79,23 @@ export async function GET(request: NextRequest) {
     const processedEvents = eventsData.events?.map((event: any) => {
       let formattedDate = 'Invalid Date';
       
-      // Try different timestamp fields
-      const timestamp = event.ts || event.ts_event || event.ts_epoch;
+      // Try different timestamp fields - Brevo might use different field names
+      const timestamp = event.ts || event.ts_event || event.ts_epoch || event.time || event.date || event.created;
+      
       if (timestamp && !isNaN(timestamp)) {
-        formattedDate = new Date(timestamp * 1000).toLocaleString();
+        // Handle both seconds and milliseconds timestamps
+        const ts = timestamp > 1000000000000 ? timestamp / 1000 : timestamp;
+        formattedDate = new Date(ts * 1000).toLocaleString();
+      } else if (timestamp && typeof timestamp === 'string') {
+        // Handle ISO date strings and other date formats
+        try {
+          const date = new Date(timestamp);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toLocaleString();
+          }
+        } catch (e) {
+          formattedDate = timestamp; // Use original if parsing fails
+        }
       }
       
       return {
@@ -92,7 +105,7 @@ export async function GET(request: NextRequest) {
         subject: event.subject || 'No Subject',
         from: event.from || 'Unknown',
         tags: event.tags || [],
-        'message-id': event.messageId || '',
+        'message-id': event.messageId || event['message-id'] || '',
         ts: event.ts,
         ts_event: event.ts_event,
         template_id: event.templateId,
@@ -104,7 +117,9 @@ export async function GET(request: NextRequest) {
         link: event.link,
         user_agent: event.userAgent,
         device_used: event.deviceUsed,
-        reason: event.reason
+        reason: event.reason,
+        // Keep raw timestamp for debugging
+        rawTimestamp: timestamp
       };
     }) || [];
 
