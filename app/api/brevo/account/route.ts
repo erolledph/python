@@ -21,10 +21,13 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      throw new Error(`Brevo API error: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Brevo account API error:', response.status, errorData);
+      throw new Error(`Brevo API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
+    console.log('Brevo account data:', data);
 
     // Extract relevant account information
     const account = {
@@ -38,7 +41,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching Brevo account:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch account information' },
+      { error: 'Failed to fetch account information', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

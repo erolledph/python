@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { incrementEmailCount } from '../brevo/plan/route';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
     );
 
     console.log('Test email sent successfully:', response.data);
+    
+    // Increment persistent email count for statistics
+    incrementEmailCount();
 
     return NextResponse.json({
       success: true,

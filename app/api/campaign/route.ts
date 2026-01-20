@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { incrementEmailCount } from '../brevo/plan/route';
 
 interface Recipient {
   id: string;
@@ -75,6 +76,10 @@ async function sendEmail(
     );
 
     console.log(`Email sent successfully to ${recipientEmail}. Response:`, response.data);
+    
+    // Increment persistent email count for statistics
+    incrementEmailCount();
+    
     return true;
   } catch (error: any) {
     console.error(`Failed to send email to ${recipientEmail}:`, error.response?.data || error.message);
