@@ -46,6 +46,8 @@ export default function Statistics() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const eventsPerPage = 10;
 
   useEffect(() => {
@@ -53,25 +55,35 @@ export default function Statistics() {
     fetchEvents(currentPage);
   }, [currentPage]);
 
+  // Auto-refresh data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStatistics();
+      if (currentPage === 1) {
+        fetchEvents(1); // Only refresh events on first page
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [currentPage]);
+
   const fetchStatistics = async () => {
     try {
-      // Mock statistics for now - replace with actual API call
-      const mockStats: Statistics = {
-        totalSent: 398,
-        delivered: 381,
-        deliveredRate: 95.73,
-        trackableOpens: 119,
-        trackableOpenRate: 31.23,
-        estimatedOpens: 119,
-        uniqueClickers: 0,
-        bounced: 1,
-        bounceRate: 0.25,
-        complaints: 0,
-        blocked: 15,
-        blockedRate: 3.77
-      };
-      setStatistics(mockStats);
+      const params = new URLSearchParams();
+      if (dateRange.startDate) params.append('startDate', dateRange.startDate);
+      if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+      
+      const response = await fetch(`/api/brevo/transactional-stats?${params.toString()}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setStatistics(data.statistics);
+      } else {
+        console.error('Failed to fetch statistics:', data.error);
+        toast.error('Failed to fetch statistics');
+      }
     } catch (error) {
+      console.error('Error fetching statistics:', error);
       toast.error('Failed to fetch statistics');
     }
   };
@@ -79,97 +91,40 @@ export default function Statistics() {
   const fetchEvents = async (page: number) => {
     try {
       setLoading(true);
-      // Mock events for now - replace with actual API call to Brevo webhook data
-      const mockEvents: EmailEvent[] = [
-        {
-          event: 'First opening',
-          date: '19-01-2026 16:25:17',
-          subject: 'asdasd',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Delivered',
-          date: '19-01-2026 16:25:04',
-          subject: 'asdasd',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Sent',
-          date: '19-01-2026 16:25:03',
-          subject: 'asdasd',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Unsubscribed',
-          date: '19-01-2026 15:51:13',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+123@gmail.com',
-          tags: []
-        },
-        {
-          event: 'First opening',
-          date: '19-01-2026 15:51:04',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+123@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Delivered',
-          date: '19-01-2026 15:51:02',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+ced@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Sent',
-          date: '19-01-2026 15:51:01',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+ced@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Delivered',
-          date: '19-01-2026 15:51:01',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+123@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Sent',
-          date: '19-01-2026 15:50:59',
-          subject: 'WEB3 LITERACY WITH BLESSED',
-          from: 'noreply@jumble.sbs',
-          email: 'erolledph+123@gmail.com',
-          tags: []
-        },
-        {
-          event: 'Blocked',
-          date: '19-01-2026 15:39:26',
-          subject: 'facebuuk',
-          from: 'recipes@jumble.sbs',
-          email: 'erolledph@gmail.com',
-          tags: []
-        }
-      ];
-
-      setEvents(mockEvents);
-      setTotalPages(Math.ceil(mockEvents.length / eventsPerPage));
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50'
+      });
+      if (dateRange.startDate) params.append('startDate', dateRange.startDate);
+      if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+      
+      const response = await fetch(`/api/brevo/events?${params.toString()}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setEvents(data.events || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+      } else {
+        console.error('Failed to fetch events:', data.error);
+        toast.error('Failed to fetch events');
+        // Set empty events on error
+        setEvents([]);
+        setTotalPages(1);
+      }
     } catch (error) {
+      console.error('Error fetching events:', error);
       toast.error('Failed to fetch events');
+      setEvents([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchStatistics(), fetchEvents(currentPage)]);
+    setRefreshing(false);
   };
 
   const getEventColor = (event: string) => {
@@ -274,6 +229,59 @@ export default function Statistics() {
           </div>
         </div>
       )}
+
+      {/* Controls Bar */}
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Date Range Filter */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="date"
+              value={dateRange.startDate}
+              onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Start date"
+            />
+            <input
+              type="date"
+              value={dateRange.endDate}
+              onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="End date"
+            />
+            <button
+              onClick={() => {
+                setDateRange({ startDate: '', endDate: '' });
+                setCurrentPage(1);
+              }}
+              className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+            >
+              Clear
+            </button>
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-2"
+          >
+            {refreshing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.242 15.176m15.176-2A8.001 8.001 0 004.242-15.176M4.422 18h15.176m-15.176-2h15.176" />
+                </svg>
+                Refresh
+              </>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Events Table */}
       <div className="bg-gray-800 rounded-lg border border-gray-700">
