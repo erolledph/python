@@ -775,11 +775,6 @@ export default function Compose() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold text-white">{template.name}</h3>
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 text-purple-600 bg-gray-600 border-gray-500 rounded focus:ring-purple-500"
-                          onClick={(e) => e.stopPropagation()}
-                        />
                       </div>
                       <p className="text-gray-400 text-sm mb-2">{template.subject}</p>
                       <div className="bg-gray-800/50 rounded p-2 h-20 overflow-hidden">
@@ -803,7 +798,7 @@ export default function Compose() {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-gray-400 text-sm">Click on a template to load it, or select multiple templates</p>
+              <p className="text-gray-400 text-sm">Click on any template to instantly load it</p>
               <button
                 onClick={() => setShowTemplateModal(false)}
                 className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
