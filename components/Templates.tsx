@@ -17,7 +17,6 @@ export default function Templates() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
@@ -119,35 +118,6 @@ export default function Templates() {
     });
   };
 
-  const handleSelectTemplate = (id: string) => {
-    setSelectedTemplates(prev =>
-      prev.includes(id)
-        ? prev.filter(tid => tid !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleUseSelectedTemplates = () => {
-    if (selectedTemplates.length === 0) {
-      toast.error('Please select at least one template');
-      return;
-    }
-
-    const selectedTemplatesData = templates.filter(template =>
-      selectedTemplates.includes(template.id)
-    );
-
-    // Store selected templates in localStorage for compose component to use
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('selectedTemplates', JSON.stringify(selectedTemplatesData));
-    }
-    
-    toast.success(`${selectedTemplates.length} template(s) ready to use in Compose`);
-    
-    // Navigate to compose page (if using routing)
-    // window.location.href = '/compose';
-  };
-
   const previewTemplate = (template: Template) => {
     const previewWindow = window.open('', '_blank');
     if (previewWindow) {
@@ -157,7 +127,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 p-6">
+    <div className="min-h-screen bg-gray-950 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 shadow-xl mb-8">
@@ -168,34 +138,13 @@ export default function Templates() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg shadow-purple-500/25 flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg shadow-blue-500/25 flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Create Template
             </button>
           </div>
         </div>
-
-        {/* Selected Templates Actions */}
-        {selectedTemplates.length > 0 && (
-          <div className="bg-purple-800/30 backdrop-blur-sm rounded-xl p-6 border border-purple-700/50 shadow-xl mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  {selectedTemplates.length} Template{selectedTemplates.length !== 1 ? 's' : ''} Selected
-                </h3>
-                <p className="text-purple-300 text-sm">Ready to use in Compose</p>
-              </div>
-              <button
-                onClick={handleUseSelectedTemplates}
-                className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 font-medium flex items-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                Use Selected Templates
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Templates Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -206,17 +155,9 @@ export default function Templates() {
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedTemplates.includes(template.id)}
-                    onChange={() => handleSelectTemplate(template.id)}
-                    className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
-                  />
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">{template.name}</h3>
-                    <p className="text-gray-400 text-sm">{template.subject}</p>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{template.name}</h3>
+                  <p className="text-gray-400 text-sm">{template.subject}</p>
                 </div>
               </div>
 
@@ -265,14 +206,14 @@ export default function Templates() {
         {/* Empty State */}
         {templates.length === 0 && (
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-12 border border-gray-700/50 shadow-xl text-center">
-            <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-purple-400" />
+            <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Plus className="w-8 h-8 text-blue-400" />
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">No Templates Yet</h3>
             <p className="text-gray-400 mb-6">Create your first email template to get started</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 font-medium"
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium"
             >
               Create Your First Template
             </button>
@@ -306,7 +247,7 @@ export default function Templates() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter template name..."
                   />
                 </div>
@@ -317,7 +258,7 @@ export default function Templates() {
                     type="text"
                     value={formData.subject}
                     onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter email subject..."
                   />
                 </div>
@@ -327,7 +268,7 @@ export default function Templates() {
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 h-64 resize-none"
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 h-64 resize-none"
                     placeholder="Enter email content (HTML supported)..."
                   />
                 </div>
@@ -346,7 +287,7 @@ export default function Templates() {
                 </button>
                 <button
                   onClick={editingTemplate ? handleUpdateTemplate : handleCreateTemplate}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {editingTemplate ? 'Update Template' : 'Create Template'}
