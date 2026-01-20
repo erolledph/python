@@ -772,7 +772,7 @@ export default function Compose() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {(() => {
                 try {
-                  const stored = localStorage.getItem('emailTemplates');
+                  const stored = typeof window !== 'undefined' ? localStorage.getItem('emailTemplates') : null;
                   const templates = stored ? JSON.parse(stored) : [];
                   
                   if (templates.length === 0) {

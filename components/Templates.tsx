@@ -24,9 +24,11 @@ export default function Templates() {
     content: ''
   });
 
-  // Load templates from localStorage
+  // Load templates from localStorage (client-side only)
   useEffect(() => {
-    loadTemplates();
+    if (typeof window !== 'undefined') {
+      loadTemplates();
+    }
   }, []);
 
   const loadTemplates = () => {
@@ -44,7 +46,9 @@ export default function Templates() {
 
   const saveTemplates = (updatedTemplates: Template[]) => {
     try {
-      localStorage.setItem('emailTemplates', JSON.stringify(updatedTemplates));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('emailTemplates', JSON.stringify(updatedTemplates));
+      }
       setTemplates(updatedTemplates);
       toast.success('Templates saved successfully');
     } catch (error) {
@@ -134,7 +138,9 @@ export default function Templates() {
     );
 
     // Store selected templates in localStorage for compose component to use
-    localStorage.setItem('selectedTemplates', JSON.stringify(selectedTemplatesData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedTemplates', JSON.stringify(selectedTemplatesData));
+    }
     
     toast.success(`${selectedTemplates.length} template(s) ready to use in Compose`);
     
