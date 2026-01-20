@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X, Mail, BarChart3, Users, Settings, Home } from 'lucide-react';
+import { Menu, X, Mail, BarChart3, Users, Settings, Home, FileText } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +16,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
     { id: 'compose', label: 'Compose', icon: Mail },
     { id: 'statistics', label: 'Statistics', icon: BarChart3 },
     { id: 'recipients', label: 'Recipients', icon: Users },
+    { id: 'templates', label: 'Templates', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

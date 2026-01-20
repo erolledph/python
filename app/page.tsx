@@ -6,6 +6,7 @@ import Compose from '@/components/Compose';
 import Statistics from '@/components/Statistics';
 import Recipients from '@/components/Recipients';
 import Settings from '@/components/Settings';
+import Templates from '@/components/Templates';
 import { Toaster } from 'sonner';
 import AuthModal from '@/components/AuthModal';
 
@@ -39,6 +40,8 @@ export default function Home() {
         return <Recipients />;
        case 'settings':
          return <Settings />;
+       case 'templates':
+         return <Templates />;
       default:
         return <Compose />;
     }
