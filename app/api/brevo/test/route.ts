@@ -22,7 +22,6 @@ export async function GET() {
         }
       });
 
-      console.log('Brevo account check successful:', accountResponse.data.email);
     } catch (error: any) {
       console.error('Brevo API key test failed:', error.response?.data || error.message);
       return NextResponse.json({
@@ -65,8 +64,6 @@ export async function GET() {
           availableSenders: senders.map((s: any) => ({ email: s.email, active: s.active }))
         }, { status: 500 });
       }
-
-      console.log('Sender email is verified:', senderEmail);
 
     } catch (error: any) {
       console.error('Sender verification check failed:', error.response?.data || error.message);

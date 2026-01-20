@@ -27,7 +27,6 @@ export async function GET() {
     }
 
     const data = await response.json();
-    console.log('Brevo account data:', data);
 
     // Extract relevant account information
     const account = {

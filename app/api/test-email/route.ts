@@ -32,8 +32,6 @@ export async function POST(request: NextRequest) {
       htmlContent: message || `<p>This is a test email sent at ${new Date().toLocaleString()}</p>`
     };
 
-    console.log(`Sending test email to ${email} from ${senderEmail}`);
-
     const response = await axios.post(
       'https://api.brevo.com/v3/smtp/email',
       payload,
@@ -46,8 +44,13 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    console.log('Test email sent successfully:', response.data);
-    
+    if (!response.data) {
+      return NextResponse.json({
+        success: false,
+        error: 'No response from Brevo API'
+      }, { status: 500 });
+    }
+
     // Increment persistent email count for statistics
     incrementEmailCount();
 

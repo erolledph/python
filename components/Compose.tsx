@@ -127,15 +127,10 @@ export default function Compose() {
   }, []);
 
   const fetchRecipients = useCallback(async () => {
-    console.log('=== FETCH RECIPIENTS DEBUG ===');
     try {
-      console.log('Fetching recipients...');
       const res = await fetch('/api/recipients');
-      console.log('Response status:', res.status);
       if (res.ok) {
         const data = await res.json();
-        console.log('Received recipients data:', data);
-        console.log('Setting recipients to:', data.recipients || []);
         setRecipients(data.recipients || []);
       } else {
         console.error('Failed to fetch recipients, status:', res.status);
@@ -164,19 +159,8 @@ export default function Compose() {
   };
 
   const handleAddRecipient = () => {
-    console.log('=== ADD RECIPIENT DEBUG ===');
-    console.log('manualName:', manualName);
-    console.log('manualEmail:', manualEmail);
-    console.log('recipients:', recipients);
-    
     if (!manualEmail) {
       showNotification('error', 'Email is required');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(manualEmail)) {
-      showNotification('error', 'Invalid email format');
       return;
     }
 
@@ -187,72 +171,58 @@ export default function Compose() {
       status: 'pending'
     };
 
-    console.log('New recipient to add:', newRecipient);
-    
     if (Array.isArray(recipients)) {
-      console.log('Adding to existing array');
       setRecipients([...recipients, newRecipient]);
     } else {
-      console.log('Creating new array');
       setRecipients([newRecipient]);
     }
-    
+
     setManualName('');
     setManualEmail('');
     showNotification('success', 'Recipient added successfully');
   };
 
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('=== CSV UPLOAD DEBUG ===');
     const file = event.target.files?.[0];
-    console.log('File:', file);
     if (!file) return;
-
-    console.log('CSV file selected:', file.name);
 
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
-        console.log('CSV raw text:', text);
         
         const lines = text.split('\n').filter(line => line.trim());
-        console.log('CSV lines:', lines);
         
         const newRecipients: Recipient[] = [];
         lines.forEach((line, index) => {
           const [name, email] = line.split(',').map(s => s.trim());
-          console.log(`Processing line ${index}:`, { name, email });
           
           if (email && email.includes('@')) {
             newRecipients.push({
-              id: `csv-${Date.now()}-${index}`,
+              id: Date.now().toString() + index,
               name: name || email.split('@')[0],
-              email,
+              email: email,
               status: 'pending'
             });
           }
         });
 
-        console.log('Parsed recipients:', newRecipients);
-
         if (newRecipients.length > 0) {
           if (Array.isArray(recipients)) {
-            console.log('Adding CSV recipients to existing array');
             setRecipients([...recipients, ...newRecipients]);
           } else {
-            console.log('Creating new array from CSV');
             setRecipients(newRecipients);
           }
           showNotification('success', `${newRecipients.length} recipients imported from CSV`);
         } else {
-          showNotification('error', 'No valid emails found in CSV');
+          showNotification('error', 'No valid email addresses found in CSV');
         }
       } catch (error) {
         console.error('CSV parsing error:', error);
         showNotification('error', 'Failed to parse CSV file');
       }
     };
+
     reader.readAsText(file);
   };
 
@@ -377,7 +347,6 @@ export default function Compose() {
        .replace(/{name}/g, 'John Doe')
        .replace(/{email}/g, 'john.doe@example.com');
 
-     console.log('Preview content:', previewContent);
      return previewContent;
    };
 

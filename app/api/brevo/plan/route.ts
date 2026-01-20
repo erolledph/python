@@ -103,7 +103,6 @@ export async function GET() {
     }
 
     const accountData = await accountResponse.json();
-    console.log('Brevo account data for plan:', accountData);
 
     // Extract plan information from real account data
     const planInfo = accountData.plan?.find((p: any) => p.type === 'free' || p.type === 'sendLimit');
@@ -134,7 +133,6 @@ export async function GET() {
       note: 'Statistics API requires Enterprise plan. Using local tracking.'
     };
 
-    console.log('Final plan data:', plan);
     return NextResponse.json(plan);
   } catch (error) {
     console.error('Error fetching Brevo plan:', error);

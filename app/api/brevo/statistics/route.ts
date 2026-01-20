@@ -66,7 +66,7 @@ export async function GET() {
           Math.round(statistics.emailsSent7Days * 0.0343) : 0; // 3.43% blocked estimate
       }
     } catch (error) {
-      console.log('Campaign statistics not available (may require higher plan)');
+      // Campaign statistics not available (may require higher plan)
     }
 
     // Extract plan information

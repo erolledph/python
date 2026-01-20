@@ -60,8 +60,6 @@ async function sendEmail(
     payload.replyTo = { email: replyTo };
   }
 
-  console.log(`Sending email to ${recipientEmail} from ${senderEmail}`);
-
   try {
     const response = await axios.post(
       'https://api.brevo.com/v3/smtp/email',
@@ -75,8 +73,6 @@ async function sendEmail(
       }
     );
 
-    console.log(`Email sent successfully to ${recipientEmail}. Response:`, response.data);
-    
     // Increment persistent email count for statistics
     incrementEmailCount();
     
@@ -112,44 +108,34 @@ async function processCampaign(
   const delay = parseInt(process.env.NEXT_PUBLIC_SEND_DELAY || '1', 10) * 1000;
 
   try {
-    console.log(`Campaign started. Found ${recipients.length} recipients`);
-
     campaignState.total = recipients.length;
 
     for (let i = 0; i < recipients.length; i++) {
       if (!campaignState.isRunning) {
-        console.log('Campaign stopped by user');
         break;
       }
 
-      const recipient = recipients[i];
-      const email = recipient.email;
-      const name = recipient.name || email.split('@')[0];
-
+      const { email, name } = recipients[i];
       campaignState.currentEmail = email;
 
       try {
         await sendEmail(email, name, subject, htmlContent, customSenderName, replyTo);
         campaignState.sent++;
-        console.log(`Sent to ${email}`);
       } catch (error) {
         campaignState.failed++;
         const errorMessage = error instanceof Error ? error.message : String(error);
-        campaignState.errors.push(`${email}: ${errorMessage}`);
-        console.error(`Failed to send to ${email}:`, error);
+        campaignState.errors.push(`Failed to send to ${email}: ${errorMessage}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-
-    console.log(`Campaign completed. Sent: ${campaignState.sent}, Failed: ${campaignState.failed}`);
   } catch (error) {
     console.error('Campaign processing error:', error);
     campaignState.errors.push(`Campaign error: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    campaignState.isRunning = false;
+    campaignState.currentEmail = '';
   }
-
-  campaignState.isRunning = false;
-  campaignState.currentEmail = '';
 }
 
 export async function POST(request: NextRequest) {
