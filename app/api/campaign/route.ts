@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { updateCampaignState, getCampaignState } from '../shared/campaignState';
 
 interface Recipient {
   id: string;
@@ -9,8 +8,14 @@ interface Recipient {
   status: string;
 }
 
-// Use shared campaign state instead of local
-// let campaignState = { ... }
+let campaignState = {
+  isRunning: false,
+  total: 0,
+  sent: 0,
+  failed: 0,
+  currentEmail: '',
+  errors: [] as string[]
+};
 
 async function sendEmail(
   recipientEmail: string,
@@ -104,13 +109,10 @@ async function processCampaign(
   try {
     console.log(`Campaign started. Found ${recipients.length} recipients`);
 
-    updateCampaignState({
-      total: recipients.length
-    });
+    campaignState.total = recipients.length;
 
     for (let i = 0; i < recipients.length; i++) {
-      const currentState = getCampaignState();
-      if (!currentState.isRunning) {
+      if (!campaignState.isRunning) {
         console.log('Campaign stopped by user');
         break;
       }
@@ -119,39 +121,30 @@ async function processCampaign(
       const email = recipient.email;
       const name = recipient.name || email.split('@')[0];
 
-      updateCampaignState({ currentEmail: email });
+      campaignState.currentEmail = email;
 
       try {
         await sendEmail(email, name, subject, htmlContent, customSenderName, replyTo);
-        const state = getCampaignState();
-        updateCampaignState({ sent: state.sent + 1 });
+        campaignState.sent++;
         console.log(`Sent to ${email}`);
       } catch (error) {
-        const state = getCampaignState();
-        updateCampaignState({ 
-          failed: state.failed + 1,
-          errors: [...state.errors, `${email}: ${error instanceof Error ? error.message : String(error)}`]
-        });
+        campaignState.failed++;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        campaignState.errors.push(`${email}: ${errorMessage}`);
         console.error(`Failed to send to ${email}:`, error);
       }
 
       await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    const finalState = getCampaignState();
-    console.log(`Campaign completed. Sent: ${finalState.sent}, Failed: ${finalState.failed}`);
+    console.log(`Campaign completed. Sent: ${campaignState.sent}, Failed: ${campaignState.failed}`);
   } catch (error) {
     console.error('Campaign processing error:', error);
-    const state = getCampaignState();
-    updateCampaignState({ 
-      errors: [...state.errors, `Campaign error: ${error instanceof Error ? error.message : String(error)}`]
-    });
+    campaignState.errors.push(`Campaign error: ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  updateCampaignState({ 
-    isRunning: false, 
-    currentEmail: '' 
-  });
+  campaignState.isRunning = false;
+  campaignState.currentEmail = '';
 }
 
 export async function POST(request: NextRequest) {
@@ -160,8 +153,7 @@ export async function POST(request: NextRequest) {
     const { action, recipients, subject, htmlContent, senderName, replyTo } = body;
 
     if (action === 'start') {
-      const currentState = getCampaignState();
-      if (currentState.isRunning) {
+      if (campaignState.isRunning) {
         return NextResponse.json({ error: 'Campaign already running' }, { status: 400 });
       }
 
@@ -173,14 +165,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Subject and email content are required' }, { status: 400 });
       }
 
-      updateCampaignState({
+      campaignState = {
         isRunning: true,
         total: 0,
         sent: 0,
         failed: 0,
         currentEmail: '',
         errors: []
-      });
+      };
 
       processCampaign(recipients, subject, htmlContent, senderName, replyTo).catch(console.error);
 
@@ -188,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'stop') {
-      updateCampaignState({ isRunning: false });
+      campaignState.isRunning = false;
       return NextResponse.json({ message: 'Campaign stopped' });
     }
 
