@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Users, Mail } from 'lucide-react';
+import { Users, Mail, X } from 'lucide-react';
 
 interface Recipient {
   id: string;
@@ -103,6 +103,7 @@ export default function Compose() {
    const [senderName, setSenderName] = useState('');
    const [replyToEmail, setReplyToEmail] = useState('');
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
 
   const showNotification = useCallback((type: 'success' | 'error', message: string) => {
@@ -146,10 +147,21 @@ export default function Compose() {
 
   useEffect(() => {
     fetchStatus();
-    fetchRecipients();
+    // Don't auto-fetch recipients - let user choose when to load them
     const interval = setInterval(fetchStatus, 2000);
     return () => clearInterval(interval);
-  }, [fetchStatus, fetchRecipients]);
+  }, [fetchStatus]);
+
+  const handleClearAll = () => {
+    setRecipients([]);
+    setManualName('');
+    setManualEmail('');
+    setEmailSubject('');
+    setEmailContent('');
+    setSenderName('');
+    setReplyToEmail('');
+    showNotification('success', 'All fields cleared');
+  };
 
   const handleAddRecipient = () => {
     console.log('=== ADD RECIPIENT DEBUG ===');
@@ -472,6 +484,12 @@ export default function Compose() {
             >
               🔄 Sync from Server
             </button>
+            <button
+              onClick={handleClearAll}
+              className="px-6 py-3 bg-red-600/50 border border-red-600/50 rounded-xl text-white hover:bg-red-600/70 transition-all duration-200 font-medium"
+            >
+              🗑️ Clear All
+            </button>
           </div>
         </div>
 
@@ -556,6 +574,19 @@ export default function Compose() {
              </div>
            </div>
 
+           {/* Template Loading Section */}
+           <div className="flex items-center justify-between">
+             <div>
+               <label className="text-gray-400 text-sm font-medium mb-2 block">Email Templates</label>
+               <p className="text-gray-500 text-xs">Load saved templates to quickly compose emails</p>
+             </div>
+             <button
+               onClick={() => setShowTemplateModal(true)}
+               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center gap-2"
+             >
+               📋 Load Template
+             </button>
+           </div>
 
            {/* HTML Editor Toolbar */}
            <div>
@@ -724,6 +755,96 @@ export default function Compose() {
            </div>
          </div>
        )}
+      {/* Template Modal */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Load Email Template</h2>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {(() => {
+                try {
+                  const stored = localStorage.getItem('emailTemplates');
+                  const templates = stored ? JSON.parse(stored) : [];
+                  
+                  if (templates.length === 0) {
+                    return (
+                      <div className="col-span-full text-center py-8">
+                        <p className="text-gray-400 mb-4">No templates found. Create templates in the Templates page first.</p>
+                        <button
+                          onClick={() => {
+                            setShowTemplateModal(false);
+                            // Navigate to templates page or open in new tab
+                            window.open('/templates', '_blank');
+                          }}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                          Create Templates
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return templates.map((template: any) => (
+                    <div
+                      key={template.id}
+                      className="bg-gray-700/50 rounded-lg p-4 border border-gray-600 hover:border-purple-500 transition-all cursor-pointer"
+                      onClick={() => {
+                        setEmailSubject(template.subject);
+                        setEmailContent(template.content);
+                        setShowTemplateModal(false);
+                        toast.success(`Template "${template.name}" loaded`);
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-white">{template.name}</h3>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-purple-600 bg-gray-600 border-gray-500 rounded focus:ring-purple-500"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <p className="text-gray-400 text-sm mb-2">{template.subject}</p>
+                      <div className="bg-gray-800/50 rounded p-2 h-20 overflow-hidden">
+                        <p className="text-gray-300 text-xs line-clamp-3">
+                          {template.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                        </p>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        {new Date(template.updatedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ));
+                } catch (error) {
+                  return (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-red-400">Error loading templates</p>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-gray-400 text-sm">Click on a template to load it, or select multiple templates</p>
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
