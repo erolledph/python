@@ -1,0 +1,49 @@
+
+> nextjs@0.1.0 dev
+> next dev
+
+  ▲ Next.js 13.5.1
+  - Local:        http://localhost:3000
+  - Environments: .env
+  - Experiments (use at your own risk):
+     · serverComponentsExternalPackages
+
+ ✓ Ready in 1911ms
+ ○ compiling /page ...
+ ✓ Compiled /page in 5.5s (483 modules)
+ ✓ Compiled in 674ms (248 modules)
+ ✓ Compiled /api/auth/route in 1569ms (487 modules)
+ ✓ Compiled /api/recipients/route in 82ms (255 modules)
+ ✓ Compiled (257 modules)
+TypeError [ERR_INVALID_ARG_TYPE]: The "code" argument must be of type number. Received type string ('SIGTERM')
+    at process.set [as exitCode] (node:internal/bootstrap/node:122:9)
+    at process.exit (node:internal/process/per_thread:235:24)
+    at process.cleanup (/app/node_modules/next/dist/server/lib/start-server.js:208:29)
+    at process.emit (node:events:531:35)
+    at Signal.callbackTrampoline (node:internal/async_hooks:130:17) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError [ERR_INVALID_ARG_TYPE]: The "code" argument must be of type number. Received type string ('SIGTERM')
+    at process.set [as exitCode] (node:internal/bootstrap/node:122:9)
+    at process.exit (node:internal/process/per_thread:235:24)
+    at process.cleanup (/app/node_modules/next/dist/server/lib/start-server.js:208:29)
+    at process.emit (node:events:531:35)
+    at Signal.callbackTrampoline (node:internal/async_hooks:130:17) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+ X uncaughtException: TypeError [ERR_INVALID_ARG_TYPE]: The "code" argument must be of type number. Received type string ('SIGTERM')
+    at process.set [as exitCode] (node:internal/bootstrap/node:122:9)
+    at process.exit (node:internal/process/per_thread:235:24)
+    at process.cleanup (/app/node_modules/next/dist/server/lib/start-server.js:208:29)
+    at process.emit (node:events:531:35)
+    at Signal.callbackTrampoline (node:internal/async_hooks:130:17) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+ X uncaughtException: TypeError [ERR_INVALID_ARG_TYPE]: The "code" argument must be of type number. Received type string ('SIGTERM')
+    at process.set [as exitCode] (node:internal/bootstrap/node:122:9)
+    at process.exit (node:internal/process/per_thread:235:24)
+    at process.cleanup (/app/node_modules/next/dist/server/lib/start-server.js:208:29)
+    at process.emit (node:events:531:35)
+    at Signal.callbackTrampoline (node:internal/async_hooks:130:17) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
