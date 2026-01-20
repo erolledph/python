@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getEmailStats } from '../plan/route';
 
 export async function GET() {
   try {
@@ -70,11 +71,18 @@ export async function GET() {
 
     // Extract plan information
     const planInfo = accountData.plan?.find((p: any) => p.type === 'free' || p.type === 'sendLimit');
-    const emailCredits = planInfo?.credits || 300;
+    // Free plan is 300 emails per day, override API value if it's close
+    const apiCredits = planInfo?.credits || 0;
+    const emailCredits = (apiCredits >= 290 && apiCredits <= 310) ? 300 : apiCredits; // Normalize to 300 for free plan
     
     // Calculate plan end date (typically 30 days from start)
     const planStart = planInfo?.startDate ? new Date(parseInt(planInfo.startDate) * 1000) : new Date();
     const planEnd = new Date(planStart.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days later
+    
+    // Get today's email usage from tracker
+    const todayStats = getEmailStats();
+    const emailCreditsUsed = todayStats.todaySent; // Today's usage
+    const emailCreditsLeft = emailCredits - emailCreditsUsed; // Remaining today
     
     // Get SMS credits (if available)
     const smsPlanInfo = accountData.plan?.find((p: any) => p.type === 'sms');
@@ -85,8 +93,8 @@ export async function GET() {
         name: planInfo?.name || 'Free Plan',
         type: planInfo?.type || 'free',
         emailCredits: emailCredits,
-        emailCreditsUsed: emailCredits - 298, // Based on your example showing 298 left
-        emailCreditsLeft: 298,
+        emailCreditsUsed: emailCreditsUsed,
+        emailCreditsLeft: emailCreditsLeft,
         planEndDate: planEnd.toISOString().split('T')[0], // Format as YYYY-MM-DD
         prepaidCredits: 0,
         prepaidCreditsLeft: 0,

@@ -55,7 +55,7 @@ function getEmailStats(): EmailStats {
   return stats;
 }
 
-export function incrementEmailCount(): EmailStats {
+function incrementEmailCount(): EmailStats {
   const stats = loadStats();
   const today = getToday();
   
@@ -73,6 +73,8 @@ export function incrementEmailCount(): EmailStats {
   saveStats(stats);
   return stats;
 }
+
+export { getEmailStats, incrementEmailCount };
 
 export async function GET() {
   try {
@@ -105,7 +107,9 @@ export async function GET() {
 
     // Extract plan information from real account data
     const planInfo = accountData.plan?.find((p: any) => p.type === 'free' || p.type === 'sendLimit');
-    const credits = planInfo?.credits || 300; // Default to 300 for free plan
+    // Free plan is 300 emails per day, override API value if it's close
+    const apiCredits = planInfo?.credits || 0;
+    const credits = (apiCredits >= 290 && apiCredits <= 310) ? 300 : apiCredits; // Normalize to 300 for free plan
     
     // Get email statistics from persistent storage
     const emailStats = getEmailStats();
